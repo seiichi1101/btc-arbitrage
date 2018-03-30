@@ -1,20 +1,18 @@
-const Kraken = require('kraken-api');
-const Bitstamp = require('bitstamp');
 const Promise = require('bluebird');
 const Aws = require('aws-sdk');
 const {format} = require('util');
 
 // Instantiate clients
-const kraken = new Kraken(process.env.KRAKEN_KEY, process.env.KRAKEN_SECRET, {
-  timeout: 60 * 60 * 48 * 1000
-});
-const bitstamp = new Bitstamp(process.env.BITSTAMP_KEY, process.env.BITSTAMP_SECRET, process.env.BITSTAMP_CLIENT_ID, 60 * 60);
+// const kraken = new Kraken(process.env.KRAKEN_KEY, process.env.KRAKEN_SECRET, {
+//   timeout: 60 * 60 * 48 * 1000
+// });
+// const bitstamp = new Bitstamp(process.env.BITSTAMP_KEY, process.env.BITSTAMP_SECRET, process.env.BITSTAMP_CLIENT_ID, 60 * 60);
 const sns = new Aws.SNS({region: process.env.SNS_REGION});
 
 // Promisify callbacks
-const asyncBitstampTicker = Promise.promisify(bitstamp.ticker);
-const asyncBitstampBuy = Promise.promisify(bitstamp.buyMarket);
-const asyncBitstampSell = Promise.promisify(bitstamp.sellMarket);
+// const asyncBitstampTicker = Promise.promisify(bitstamp.ticker);
+// const asyncBitstampBuy = Promise.promisify(bitstamp.buyMarket);
+// const asyncBitstampSell = Promise.promisify(bitstamp.sellMarket);
 
 export const watch = async (event, context, callback) => {
   try {
@@ -22,7 +20,7 @@ export const watch = async (event, context, callback) => {
     const {bitstampPrice, krakenPrice} = await getPrices(pair);
     const spread = calculateSpread(bitstampPrice, krakenPrice);
     if (spread < process.env.SPREAD_THRESHOLD) {
-      return callback(null, response);
+      return callback(null, 'hoge');
     }
     if (krakenPrice < bitstampPrice) {
       // buy on kraken -> sell on bitstamp
@@ -31,14 +29,14 @@ export const watch = async (event, context, callback) => {
       console.log(format('selling %f of btc %f at %f on bitstamp', (bitstampPrice*krakenVolume).toFixed(2), krakenVolume, bitstampPrice));
       // Try to buy on kraken
       try {
-        const krakenResponse = await kraken.api('AddOrder', {
-            pair: formatToKrakenPair(pair),
-            volume: krakenVolume,
-            type: 'buy',
-            ordertype: 'market'
-        });
-        console.log(krakenResponse);
-        const txIds = krakenResponse['result']['txid'];
+        // const krakenResponse = await kraken.api('AddOrder', {
+        //     pair: formatToKrakenPair(pair),
+        //     volume: krakenVolume,
+        //     type: 'buy',
+        //     ordertype: 'market'
+        // });
+        // console.log(krakenResponse);
+        // const txIds = krakenResponse['result']['txid'];
         if (typeof txId === 'undefined') {
             return callback(false, {statusCode: 400, message: 'Unable to read kraken transaction id'});
         }
@@ -47,9 +45,9 @@ export const watch = async (event, context, callback) => {
       }
       // Now try to sell on bitstamp
       try {
-        bitstampResponse = await asyncBitstampSell(pair.toLowerCase(), krakenVolume);
-        console.log(bitstampResponse);
-        const orderId = bitstampResponse['id'];
+        // bitstampResponse = await asyncBitstampSell(pair.toLowerCase(), krakenVolume);
+        // console.log(bitstampResponse);
+        // const orderId = bitstampResponse['id'];
         if (typeof orderId === 'undefined') {
             // send a message that we fucked up, we bought but not sold, or add a retry
             return callback(false, {statusCode: 400, message: 'Unable to read bitstamp order id'});
@@ -68,9 +66,9 @@ export const watch = async (event, context, callback) => {
       console.log(format('selling %fEUR of btc %f at %f on kraken', (krakenPrice*bitstampVolume).toFixed(2), bitstampVolume, krakenPrice));
       // Try to buy on bitstamp
       try {
-        const bitstampResponse = await asyncBitstampBuy(pair.toLowerCase(), bitstampVolume);
-        console.log(bitstampResponse);
-        const orderId = bitstampResponse['id'];
+        // const bitstampResponse = await asyncBitstampBuy(pair.toLowerCase(), bitstampVolume);
+        // console.log(bitstampResponse);
+        // const orderId = bitstampResponse['id'];
         if (typeof orderId === 'undefined') {
             return callback(false, {statusCode: 400, message: 'Unable to read bitstamp order id'});
         }
@@ -78,15 +76,15 @@ export const watch = async (event, context, callback) => {
         return callback(false, {statusCode: 400, message: JSON.stringify(e)});
       }
       // Try to sell on kraken
-      try { 
-        const krakenResponse = await kraken.api('AddOrder', {
-          pair: pair,
-          volume: bitstampVolume,
-          type: 'sell',
-          ordertype: 'market'
-        });
-        console.log(krakenResponse);
-        const txIds = krakenResponse['result']['txid'];
+      try {
+        // const krakenResponse = await kraken.api('AddOrder', {
+        //   pair: pair,
+        //   volume: bitstampVolume,
+        //   type: 'sell',
+        //   ordertype: 'market'
+        // });
+        // console.log(krakenResponse);
+        // const txIds = krakenResponse['result']['txid'];
         if (typeof txId === 'undefined') {
             // send a message that we fucked up, we bought but not sold, or add a retry
             return callback(false, {statusCode: 400, message: 'Unable to read kraken transaction id'});
@@ -124,13 +122,15 @@ export const calculateSpread = (krakenPrice, bitstampPrice) => {
 
 // given a currency pair returns the current ask price in the two exchanges
 export const getPrices = async pair => {
-  const krakenPromise = kraken.api('Ticker', { pair : formatToKrakenPair(pair) });
-  const bitstampPromise = asyncBitstampTicker(pair);
-  // Get Ticker Info
-  const [krakenResponse, bitstampResponse] = await Promise.all([krakenPromise, bitstampPromise])
-  const krakenPrice = krakenResponse['result'][formatToKrakenPair(pair)]['a'][0];
-  const bitstampPrice = bitstampResponse['ask'];
-
+  // const krakenPromise = kraken.api('Ticker', { pair : formatToKrakenPair(pair) });
+  // const bitstampPromise = asyncBitstampTicker(pair);
+  // // Get Ticker Info
+  // const [krakenResponse, bitstampResponse] = await Promise.all([krakenPromise, bitstampPromise])
+  // const krakenPrice = krakenResponse['result'][formatToKrakenPair(pair)]['a'][0];
+  // const bitstampPrice = bitstampResponse['ask'];
+  const bitstampPrice = 100;
+  const krakenPrice = 200;
+  console.log('pair: ', pair);
   return {bitstampPrice, krakenPrice};
 };
 

@@ -83,7 +83,7 @@ functions:
         BITSTAMP_KEY: bitstamp-key
         BITSTAMP_SECRET: bitstamp-secret
         BITSTAMP_CLIENT_ID: bitstamp-client-id
-        ASSET: BTCEUR
+        ASSET: BTCJPY
         AMOUNT: 100EUR
         SNS_TOPIC_ARN: sns-topic-arn
         SNS_REGION: sns-region

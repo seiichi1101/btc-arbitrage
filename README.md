@@ -1,6 +1,5 @@
 ## An AWS Lambda function that looks for Bitcoin Arbitrage opportunities
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT) [![chat](https://badges.gitter.im/bitcoin-arbitrage/Lobby.svg)](https://gitter.im/bitcoin-arbitrage/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This is a simple **AWS Lambda function** that finds interesting **arbitrage opportunities for cryptocurrencies**. At the moment there are only two exchanges with relatively different volumes ([Kraken](https://kraken.com) and [BitStamp](https://bitstamp/com)). It runs every 10 (you can setup your interval) minutes.
 
@@ -88,4 +87,3 @@ functions:
 ### It text you when you make profit or when something goes wrong
 
 Thanks to the integration of [Amazon SNS](https://aws.amazon.com/sns) the lambda function communicate with the amazon notification systema and it's able to send you a text message when something goes wrong or when the function succeed to make a profitable arbitrage operation
-
